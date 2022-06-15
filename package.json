@@ -1,0 +1,27 @@
+{
+  "name": "com.z-type.game-toolkit-core",
+  "version": "0.0.1",
+  "displayName": "Z-Type Game Toolkit (Core)",
+  "description": "Core scripts for any type of Unity game project.",
+  "unity": "2021.3",
+  "unityRelease": "2f1",
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "licensesUrl": "",
+  "dependencies": {
+    "com.cysharp.unitask": "2.3.1",
+    "com.neuecc.unirx": "7.1.0"
+  },
+  "keywords": [
+    "toolkit",
+    "manager",
+    "system",
+    "tools"
+  ],
+  "author": {
+    "name": "Z-Type Games",
+    "email": "md.zaid73@gmail.com",
+    "url": "https://github.com/cobaltBlue73/ztype-unity-game-toolkit-core"
+  },
+  "type": "library"
+}
