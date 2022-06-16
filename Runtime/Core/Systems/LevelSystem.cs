@@ -2,7 +2,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace ZType.Core.LevelSystems
+namespace ZType.Core.Systems
 {
     public abstract class LevelSystem : MonoBehaviour
     {

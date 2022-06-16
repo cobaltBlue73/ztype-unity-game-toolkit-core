@@ -1,6 +1,6 @@
 using System;
 
-namespace ZType.Core.LevelSystems.Interfaces
+namespace ZType.Core.Systems.Interfaces
 {
     public interface ILevelPausable: IComparable<ILevelPausable>
     {

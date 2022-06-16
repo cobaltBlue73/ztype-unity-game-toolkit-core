@@ -1,7 +1,7 @@
 using System.Linq;
 using UnityEngine;
 
-namespace ZType.Core.GameSystems
+namespace ZType.Core.Systems
 {
     public abstract class GameSystem : ScriptableObject
     {

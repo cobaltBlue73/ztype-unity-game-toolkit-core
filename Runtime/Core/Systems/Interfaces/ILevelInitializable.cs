@@ -1,7 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 
-namespace ZType.Core.LevelSystems.Interfaces
+namespace ZType.Core.Systems.Interfaces
 {
     public interface ILevelInitializable: IComparable<ILevelInitializable>
     {

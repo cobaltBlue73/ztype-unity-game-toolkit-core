@@ -1,11 +1,10 @@
 using System.Linq;
+using ZType.Core.Systems.Interfaces;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using ZType.Core.LevelSystems.Interfaces;
-using ZType.Utility.Interfaces;
-using ZType.Utility.Singleton;
+using ZType.Core.Utility.Singleton;
 
-namespace ZType.Core.LevelSystems
+namespace ZType.Core.Systems
 {
     public class LevelManager : MonoSingleton<LevelManager>
     {

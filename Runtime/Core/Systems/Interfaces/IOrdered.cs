@@ -1,6 +1,6 @@
 using System;
 
-namespace ZType.Utility.Interfaces
+namespace ZType.Core.Systems.Interfaces
 {
     public interface IOrdered: IComparable<IOrdered>
     {
