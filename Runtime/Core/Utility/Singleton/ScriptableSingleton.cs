@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ZType.Utility.Singleton
@@ -5,28 +6,33 @@ namespace ZType.Utility.Singleton
     public abstract class ScriptableSingleton<T> : ScriptableObject where T: ScriptableSingleton<T>
     {
         #region Static
+        public static T Instance => LazyInstance.Value;
 
-        public static T Instance
+        private static readonly Lazy<T> LazyInstance = new(() =>
         {
-            get
+            var results = Resources.LoadAll<T>("");
+            T instance = null;
             
+            if (results.Length > 0)
             {
-                if (!_instance)
-                    _instance = Resources.Load<T>(nameof(T));
-
-                if (_instance) return _instance;
+                instance = results[0];
                 
-                _instance = CreateInstance<T>();
-                Debug.LogWarning($"A new instance of {typeof(T)} was created because no instance was found", _instance);
-                
-                return _instance;
+                if (results.Length > 1)
+                    Debug.LogWarning($"More that one instance of {typeof(T)} was found.");
             }
-        }
-        
-        private static T _instance;
+            else
+            {
+                instance = CreateInstance<T>();
+                Debug.LogWarning($"A new instance of {typeof(T)} was created because no instance was found", instance);
+            }
+            
+            instance.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            Resources.UnloadUnusedAssets();
+            
+            return instance;
+        });
         
         #endregion
-
         
     }
 }

@@ -1,7 +1,11 @@
+using System;
+using System.Linq;
 using UnityEngine;
 
 namespace ZType.Core.Utility.Singleton
 {
+    public class DontDestroySingletonOnLoadAttribute : Attribute { }
+    
     public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
     {
         #region Static
@@ -13,17 +17,26 @@ namespace ZType.Core.Utility.Singleton
                 if (_instance) return _instance;
 
                 _instance = FindObjectOfType<T>();
-                if (_instance) return _instance;
+                
+                if (!_instance)
+                {
+                    _instance = LoadInstance();
+                    
+                    if(!_instance)
+                        _instance = CreateInstance();
+                }
+                
+                if(DontDestroySingletonOnLoad())
+                   DontDestroyOnLoad(_instance.gameObject);
 
-                _instance = LoadInstance();
-                if (_instance) return _instance;
-
-                _instance = CreateInstance();
                 return _instance;
             }
         }
         
         private static T _instance;
+
+        private static bool DontDestroySingletonOnLoad() => 
+            typeof(T).GetCustomAttributes(typeof(DontDestroySingletonOnLoadAttribute), true).Any();
 
         private static T LoadInstance()
         {
@@ -53,9 +66,13 @@ namespace ZType.Core.Utility.Singleton
             if (_instance == null)
             {
                 _instance = this as T;
+
+                if (DontDestroySingletonOnLoad())
+                    DontDestroyOnLoad(gameObject);
             }
             else if (_instance != this)
             {
+                Debug.LogWarning($"Another instance of {typeof(T)} was found and destroyed", this);
                 Destroy(gameObject);
             }
         }
