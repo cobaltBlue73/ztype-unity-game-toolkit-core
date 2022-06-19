@@ -2,7 +2,7 @@
 
 namespace Core.Utility.Singleton
 {
-    public abstract class LazySingleton<T> where T : new()
+    public abstract class Singleton<T> where T : new()
     {
         private static readonly Lazy<T> LazyInstance = new(()=> new T());
 

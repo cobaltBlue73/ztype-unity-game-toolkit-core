@@ -1,13 +1,36 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ZType.Core.Utility.Singleton
 {
-    public class DontDestroySingletonOnLoadAttribute : Attribute { }
+    public class MonoSingletonSettingsAttribute : Attribute
+    { 
+        public enum SourceType
+        {
+            Scene,
+            Resource,
+            Create
+        }
+
+        public SourceType Source { get; }
+        public string SourcePath { get; }
+        public bool IsPersistent { get; }
+        public bool CreateFallBack { get; }
+
+        public MonoSingletonSettingsAttribute(SourceType source, string sourcePath, bool isPersistent = false, bool createFallBack = false)
+        {
+            Source = source;
+            SourcePath = sourcePath;
+            IsPersistent = isPersistent;
+            CreateFallBack = createFallBack;
+        }
+    }
     
     public abstract class MonoSingleton<T> : MonoBehaviour where T : MonoSingleton<T>
     {
+      
         #region Static
 
         public static T Instance
@@ -15,46 +38,92 @@ namespace ZType.Core.Utility.Singleton
             get
             {
                 if (_instance) return _instance;
-
-                _instance = FindObjectOfType<T>();
                 
+                var settingsAttr = GetSettingsAttribute();
+            
+                if (settingsAttr == null)
+                {
+                    _instance = FindObjectOfType<T>();
+                    if(!_instance) throw new Exception($"No instance of {typeof(T)} could not be found");
+                    return _instance;
+                }
+
+                switch (settingsAttr.Source)
+                {
+                    case MonoSingletonSettingsAttribute.SourceType.Scene:
+                        _instance = GetFromScene(settingsAttr.SourcePath);
+                        break;
+                    case MonoSingletonSettingsAttribute.SourceType.Resource:
+                        _instance = GetFromResources(settingsAttr.SourcePath);
+                        break;
+                    case MonoSingletonSettingsAttribute.SourceType.Create:
+                        _instance = CreateInstance();
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
                 if (!_instance)
                 {
-                    _instance = LoadInstance();
-                    
-                    if(!_instance)
+                    if (settingsAttr.CreateFallBack)
+                    {
+                        Debug.LogWarning($"No instance of {typeof(T)} could be found, creating new instance.");
                         _instance = CreateInstance();
-                }
+                    }
                 
-                if(DontDestroySingletonOnLoad())
-                   DontDestroyOnLoad(_instance.gameObject);
-
+                    if(!_instance) throw new Exception($"No instance of {typeof(T)} could be found.");
+                }
+            
+                if(_instance && settingsAttr.IsPersistent)
+                    DontDestroyOnLoad(_instance.gameObject);
+                
                 return _instance;
             }
         }
+
+        public static bool HasInstance => _instance;
         
         private static T _instance;
+        
+        private static MonoSingletonSettingsAttribute GetSettingsAttribute() =>
+            typeof(T).GetCustomAttributes(typeof(MonoSingletonSettingsAttribute), true)
+                .FirstOrDefault() as MonoSingletonSettingsAttribute;
 
-        private static bool DontDestroySingletonOnLoad() => 
-            typeof(T).GetCustomAttributes(typeof(DontDestroySingletonOnLoadAttribute), true).Any();
-
-        private static T LoadInstance()
+        private static T GetFromScene(string scenePath)
         {
-            var prefab = Resources.Load<GameObject>(nameof(T));
-            return !prefab ? null : Instantiate(prefab)
-                .GetComponent<T>();
+            var scene = SceneManager.GetSceneByName(scenePath);
+            if (!scene.isLoaded)
+                SceneManager.LoadScene(scene.buildIndex, LoadSceneMode.Additive);
+            
+            var activeScene = SceneManager.GetActiveScene();
+            if (activeScene != scene)
+                SceneManager.SetActiveScene(scene);
+
+            var instance = FindObjectOfType<T>();
+                
+            if (activeScene != scene)
+                SceneManager.SetActiveScene(activeScene);
+
+            return instance;
         }
 
-        private static T CreateInstance()
+        private static T GetFromResources(string resourcePath)
         {
-            var newInstance = new GameObject(nameof(T), typeof(T))
-                .GetComponent<T>();
+            var instance = Resources.Load<T>(resourcePath);
             
-            Debug.LogWarning($"A new instance of {typeof(T)} was created because no instance was found", newInstance);
+            instance.hideFlags = HideFlags.DontUnloadUnusedAsset;
+            Resources.UnloadUnusedAssets();
             
-            return newInstance;
+            return instance;
         }
 
+        private static T CreateInstance() =>
+            new GameObject(typeof(T).Name, typeof(T))
+                .GetComponent<T>();
+
+        private static bool IsPersistent() => 
+            GetSettingsAttribute() is { IsPersistent: true };
+        
         #endregion
 
         #region Event Methods
@@ -67,7 +136,7 @@ namespace ZType.Core.Utility.Singleton
             {
                 _instance = this as T;
 
-                if (DontDestroySingletonOnLoad())
+                if (IsPersistent())
                     DontDestroyOnLoad(gameObject);
             }
             else if (_instance != this)

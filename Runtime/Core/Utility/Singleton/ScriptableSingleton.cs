@@ -1,29 +1,40 @@
 using System;
+using System.Linq;
 using UnityEngine;
 
 namespace ZType.Utility.Singleton
 {
+    public class ScriptableSingletonSettingsAttribute : Attribute
+    {
+        public string ResourcePathName { get; }
+        public bool CreateFallBack { get; }
+
+        public ScriptableSingletonSettingsAttribute(string resourcePathName, bool createFallBack = false)
+        {
+            ResourcePathName = resourcePathName;
+            CreateFallBack = createFallBack;
+        }
+    }
+    
     public abstract class ScriptableSingleton<T> : ScriptableObject where T: ScriptableSingleton<T>
     {
         #region Static
         public static T Instance => LazyInstance.Value;
 
+        public static bool HasInstance => LazyInstance.IsValueCreated;
+
         private static readonly Lazy<T> LazyInstance = new(() =>
         {
-            var results = Resources.LoadAll<T>("");
-            T instance = null;
+            var attrSettings = GetSettingsAttribute();
             
-            if (results.Length > 0)
+            var instance = Resources.Load<T>(attrSettings.ResourcePathName);
+
+            if(!instance)
             {
-                instance = results[0];
+                if(!attrSettings.CreateFallBack) throw new Exception($"No instance of {typeof(T)} could be found.");
                 
-                if (results.Length > 1)
-                    Debug.LogWarning($"More that one instance of {typeof(T)} was found.");
-            }
-            else
-            {
                 instance = CreateInstance<T>();
-                Debug.LogWarning($"A new instance of {typeof(T)} was created because no instance was found", instance);
+                Debug.LogWarning($"No instance of {typeof(T)} could be found, creating new instance.");
             }
             
             instance.hideFlags = HideFlags.DontUnloadUnusedAsset;
@@ -32,7 +43,10 @@ namespace ZType.Utility.Singleton
             return instance;
         });
         
-        #endregion
+        private static ScriptableSingletonSettingsAttribute GetSettingsAttribute() =>
+            typeof(T).GetCustomAttributes(typeof(ScriptableSingletonSettingsAttribute), true)
+                .FirstOrDefault() as ScriptableSingletonSettingsAttribute;
         
+        #endregion
     }
 }
