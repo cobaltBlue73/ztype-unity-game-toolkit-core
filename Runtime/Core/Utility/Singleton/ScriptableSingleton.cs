@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace ZType.Utility.Singleton
+namespace ZType.Core.Utility.Singleton
 {
     public class ScriptableSingletonSettingsAttribute : Attribute
     {

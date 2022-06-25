@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Core.Utility.Singleton
+namespace ZType.Core.Utility.Singleton
 {
     public abstract class Singleton<T> where T : new()
     {

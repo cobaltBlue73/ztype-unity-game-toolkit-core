@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UniRx;
 
-namespace ZType.Utility.StateMachine
+namespace ZType.Core.Utility.StateMachine
 {
     public class StateMachine<T>: IDisposable where T : struct, IConvertible
     {
