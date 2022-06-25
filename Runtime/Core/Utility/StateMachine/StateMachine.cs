@@ -1,81 +1,103 @@
 ﻿using System;
 using System.Collections.Generic;
-using UniRx;
+using ZType.Core.Utility.StateMachine.Interfaces;
 
 namespace ZType.Core.Utility.StateMachine
 {
-    public class StateMachine<T>: IDisposable where T : struct, IConvertible
+    public class StateMachine<T> where T : IComparable, IConvertible
     {
-        private class StateBehaviour: IDisposable
-        {
-            public readonly Subject<T> OnEnter = new();
-            public readonly Subject<T> OnExit = new();
-            public readonly Subject<T> OnUpdate = new();
+        #region Inner
 
-            public void Dispose()
-            {
-                OnEnter?.Dispose();
-                OnExit?.Dispose();
-                OnUpdate?.Dispose();
-            }
+        private class StateBehaviour
+        {
+            public Action EnterAction;
+            public Action ExitAction;
+            public Action UpdateAction;
+            public IStateSwitchDecision<T> SwitchDecision;
         }
 
-        private readonly Dictionary<int, StateBehaviour> _states = new();
+        #endregion
 
-        private T _state;
-        private StateBehaviour _curBehaviour;
-        
-        public StateMachine() => InitStates();
-        
+        #region Constructor
+
+        public StateMachine() => _states = new Dictionary<T, StateBehaviour>();
+
         public StateMachine(T initialState)
         {
-            InitStates();
-            State = initialState;
+            _states = new Dictionary<T, StateBehaviour>();
+            CurrentState = initialState;
         }
 
-        private void InitStates()
-        {
-            foreach (var state in Enum.GetValues(typeof(T)))
-                _states.Add(Convert.ToInt32(state), new StateBehaviour());
-        }
+        #endregion
 
-        public T State
+        #region Variables
+
+        private readonly Dictionary<T, StateBehaviour> _states;
+        private T _currentState;
+        private StateBehaviour _curBehaviour;
+
+        #endregion
+        
+        #region Properties
+
+        public T CurrentState
         {
-            get => _state;
+            get => _currentState;
             set
             {
-                if (_state.Equals(value)) return;
-
-                // _curBehaviour?.OnExit.OnNext(_state);
-
-                PreviousState = _state;
-                _state = value;
-                _curBehaviour = _states[Convert.ToInt32(value)];
+                if (_currentState.Equals(value)) return;
                 
-                // _curBehaviour.OnEnter.OnNext(_state);
+                _curBehaviour?.ExitAction?.Invoke();
+                
+                PreviousState = _currentState;
+                _currentState = value;
+                _curBehaviour = _states[value];
+                
+                _curBehaviour.EnterAction?.Invoke();
             }
         }
-
+        
         public T PreviousState { get; private set; }
 
-        // public void Update() => _curBehaviour?.OnUpdate.OnNext(_state);
+        #endregion
 
-        // public IObservable<T> GetEnterStateAsObservable(T state) =>   
-            // _states[Convert.ToInt32(state)].OnEnter.AsObservable();
+        #region Methods
         
-        // public IObservable<T> GetExitStateAsObservable(T state) =>   
-            // _states[Convert.ToInt32(state)].OnExit.AsObservable();
-        
-        // public IObservable<T> GetUpdateStateAsObservable(T state) => 
-            // _states[Convert.ToInt32(state)].OnUpdate.AsObservable();
-
-        public void Dispose()
+        public void Update()
         {
-            foreach (var stateBehaviour in _states.Values)
-            {
-                stateBehaviour.Dispose();
-            }
+            if(_curBehaviour == null) return;
+            
+           _curBehaviour.UpdateAction?.Invoke();
+           
+            if(_curBehaviour.SwitchDecision == null || 
+               !_curBehaviour.SwitchDecision.TrySwitchState(out var newState)) return;
+
+            CurrentState = newState;
         }
+
+        private StateBehaviour GetStateBehaviour(T state)
+        {
+            if (_states.TryGetValue(state, out var behaviour))
+                return behaviour;
+            
+            behaviour = new StateBehaviour();
+            _states.Add(state, behaviour);
+
+            return behaviour;
+        }
+        public void SetEnterAction(T state, Action enterAction) => 
+            GetStateBehaviour(state).EnterAction = enterAction;
+
+        public void SetExitAction(T state, Action exitAction) =>
+            GetStateBehaviour(state).ExitAction = exitAction;
+        
+        public void SetUpdateAction(T state, Action updateAction) => 
+            GetStateBehaviour(state).UpdateAction = updateAction;
+
+        public void SetSwitchDecision(T state, IStateSwitchDecision<T> switchDecision) => 
+            GetStateBehaviour(state).SwitchDecision = switchDecision;
+
+        #endregion
     }
 }
 
