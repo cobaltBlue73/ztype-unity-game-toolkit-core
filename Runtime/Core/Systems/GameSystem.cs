@@ -14,9 +14,9 @@ namespace ZType.Core.Systems
         #region Static
 
         #region Properties
-        
-        public static GameSystem[] GameSystems => 
-            _gameSystems?? Resources.LoadAll<GameSystem>(GameSystemsPath);
+
+        public static GameSystem[] GameSystems =>
+            _gameSystems ?? Resources.LoadAll<GameSystem>(GameSystemsPath);
 
         #endregion
 
@@ -28,13 +28,13 @@ namespace ZType.Core.Systems
 
         #region Functions
 
-        public static TGameSystem GetGameSystem<TGameSystem>() where TGameSystem : GameSystem => 
-            GameSystems.FirstOrDefault(gs => gs is TGameSystem) as TGameSystem;
+        public static TGameSystem GetGameSystem<TGameSystem>() where TGameSystem : GameSystem
+        {
+            return GameSystems.FirstOrDefault(gs => gs is TGameSystem) as TGameSystem;
+        }
 
         #endregion
-        
+
         #endregion
-        
-      
     }
 }

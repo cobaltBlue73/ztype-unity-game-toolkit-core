@@ -1,0 +1,20 @@
+{
+  "name": "Core",
+  "rootNamespace": "ZType",
+  "references": [
+    "GUID:560b04d1a97f54a4e82edc0cbbb69285",
+    "GUID:f51ebe6a0ceec4240a699833d6309b23",
+    "GUID:14165214884ae4a619bfb290f28194a7",
+    "GUID:29492541a59d04a81b47a7f225e8a22d",
+    "GUID:7cead87e598844809ae298f71540fc18"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

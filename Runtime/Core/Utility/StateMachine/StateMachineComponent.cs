@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Sirenix.Utilities;
 using UnityEngine;
 using ZType.Core.Utility.StateMachine.Interfaces;
 
@@ -8,62 +7,6 @@ namespace ZType.Core.Utility.StateMachine
 {
     public class StateMachineComponent : MonoBehaviour
     {
-        #region Internal
-
-        [System.Serializable]
-        private class SwitchStateDecision
-        {
-            public SwitchStateConditionBehaviour switchCondition;
-            public string NewState;
-        }
-
-        [System.Serializable]
-        private class StateData: IStateSwitchDecision<string>
-        {
-            public string State;
-            public StateBehaviour[] StateBehaviours;
-            public SwitchStateDecision[] SwitchDecisions;
-
-            public void OnEnter()
-            {
-                foreach (var behaviour in StateBehaviours)
-                    if (behaviour) behaviour.OnStateEnter();
-            }
-
-            public void OnExit()
-            {
-                foreach (var behaviour in StateBehaviours)
-                    if (behaviour) behaviour.OnExitState();
-            }
-
-            public void OnUpdate()
-            {
-                for (var i = 0; i < StateBehaviours.Length; ++i) 
-                    StateBehaviours[i]?.OnUpdateState();
-            }
-            public bool TrySwitchState(out string newState)
-            {
-                newState = default;
-
-                var validDecision = SwitchDecisions.FirstOrDefault(decision => 
-                        decision.switchCondition.ConditionValid());
-
-                if (validDecision == null) return false;
-                
-                newState = validDecision.NewState;
-                return true;
-
-            }
-        }
-        
-        [System.Serializable]
-        private struct StateMachineData
-        {
-            public StateData[] StateData;
-        }
-
-        #endregion
-
         #region Inspector
 
         [SerializeField] private StateMachineData stateMachineData;
@@ -72,7 +15,65 @@ namespace ZType.Core.Utility.StateMachine
 
         #region Variables
 
-        private readonly StateMachine<string> _stateMachine = new StateMachine<string>();
+        private readonly StateMachine<string> _stateMachine = new();
+
+        #endregion
+
+        #region Internal
+
+        [Serializable]
+        private class SwitchStateDecision
+        {
+            public SwitchStateConditionBehaviour switchCondition;
+            public string NewState;
+        }
+
+        [Serializable]
+        private class StateData : IStateSwitchDecision<string>
+        {
+            public string State;
+            public StateBehaviour[] StateBehaviours;
+            public SwitchStateDecision[] SwitchDecisions;
+
+            public bool TrySwitchState(out string newState)
+            {
+                newState = default;
+
+                var validDecision = SwitchDecisions.FirstOrDefault(decision =>
+                    decision.switchCondition.ConditionValid());
+
+                if (validDecision == null) return false;
+
+                newState = validDecision.NewState;
+                return true;
+            }
+
+            public void OnEnter()
+            {
+                foreach (var behaviour in StateBehaviours)
+                    if (behaviour)
+                        behaviour.OnStateEnter();
+            }
+
+            public void OnExit()
+            {
+                foreach (var behaviour in StateBehaviours)
+                    if (behaviour)
+                        behaviour.OnExitState();
+            }
+
+            public void OnUpdate()
+            {
+                for (var i = 0; i < StateBehaviours.Length; ++i)
+                    StateBehaviours[i]?.OnUpdateState();
+            }
+        }
+
+        [Serializable]
+        private struct StateMachineData
+        {
+            public StateData[] StateData;
+        }
 
         #endregion
 
@@ -91,7 +92,10 @@ namespace ZType.Core.Utility.StateMachine
             }
         }
 
-        private void Update() => _stateMachine.Update();
+        private void Update()
+        {
+            _stateMachine.Update();
+        }
 
         #endregion
 

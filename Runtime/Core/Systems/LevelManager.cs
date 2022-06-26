@@ -1,7 +1,8 @@
+using System;
 using System.Linq;
-using ZType.Core.Systems.Interfaces;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using ZType.Core.Systems.Interfaces;
 using ZType.Core.Utility.Singleton;
 
 namespace ZType.Core.Systems
@@ -16,26 +17,26 @@ namespace ZType.Core.Systems
             Initializing,
             Starting,
             Playing,
-            Paused,
+            Paused
         }
 
         #endregion
+
         #region Inspector
 
-        
         #endregion
-        
+
         #region Properties
 
-        public LevelSystem[] LevelSystems => 
-            _levelSystems?? GetComponentsInChildren<LevelSystem>();
+        public LevelSystem[] LevelSystems =>
+            _levelSystems ?? GetComponentsInChildren<LevelSystem>();
 
         public bool Paused => !enabled;
 
         #endregion
-        
+
         #region Variables
-        
+
         private LevelSystem[] _levelSystems;
         private ILevelInitializable[] _initializables;
         private ILevelStartable[] _startables;
@@ -43,20 +44,28 @@ namespace ZType.Core.Systems
         private IFrameUpdatable[] _frameUpdatables;
         private IPostFrameUpdatable[] _postFrameUpdatables;
         private IPhysicsUpdatable[] _physicsUpdatables;
-        
+
         #endregion
 
         #region Public Functions
 
-        public TLevelSystem GetLevelSystem<TLevelSystem>() where TLevelSystem : LevelSystem =>
-            LevelSystems.FirstOrDefault(system => system is TLevelSystem) as TLevelSystem;
+        public TLevelSystem GetLevelSystem<TLevelSystem>() where TLevelSystem : LevelSystem
+        {
+            return LevelSystems.FirstOrDefault(system => system is TLevelSystem) as TLevelSystem;
+        }
 
-        public void Pause() => enabled = false;
-        
-        public void Unpause() => enabled = true;
-        
+        public void Pause()
+        {
+            enabled = false;
+        }
+
+        public void Unpause()
+        {
+            enabled = true;
+        }
+
         #endregion
-        
+
         #region Event Functions
 
         protected override void Awake()
@@ -65,8 +74,8 @@ namespace ZType.Core.Systems
 
             void InitAndSort<T>(out T[] array)
             {
-                array = LevelSystems.OfType<T>().ToArray(); 
-                System.Array.Sort(array);
+                array = LevelSystems.OfType<T>().ToArray();
+                Array.Sort(array);
             }
 
             InitAndSort(out _initializables);
@@ -80,58 +89,40 @@ namespace ZType.Core.Systems
         private void OnEnable()
         {
             if (!Application.isPlaying || !enabled) return;
-            
-            for (var i = 0; i < _pausables.Length; ++i)
-            {
-                _pausables[i].OnLevelPaused(Paused);
-            }
+
+            for (var i = 0; i < _pausables.Length; ++i) _pausables[i].OnLevelPaused(Paused);
         }
 
         private void OnDisable()
         {
             if (!Application.isPlaying || enabled) return;
-            
-            for (var i = 0; i < _pausables.Length; ++i)
-            {
-                _pausables[i].OnLevelPaused(Paused);
-            }
+
+            for (var i = 0; i < _pausables.Length; ++i) _pausables[i].OnLevelPaused(Paused);
         }
 
         private async void Start()
         {
             enabled = false;
-            for (var i = 0; i < _initializables.Length; ++i)
-            {
-                await _initializables[i].OnLevelInitializeAsync();
-            }
+            for (var i = 0; i < _initializables.Length; ++i) await _initializables[i].OnLevelInitializeAsync();
             await UniTask.WhenAll(_startables.Select(startable => startable.OnLevelStartAsync()));
             enabled = true;
         }
-        
+
         private void Update()
         {
-            for (var i = 0; i < _frameUpdatables.Length; ++i)
-            {
-                _frameUpdatables[i].OnFrameUpdate();
-            }
+            for (var i = 0; i < _frameUpdatables.Length; ++i) _frameUpdatables[i].OnFrameUpdate();
         }
-        
+
         private void LateUpdate()
         {
-            for (var i = 0; i < _postFrameUpdatables.Length; ++i)
-            {
-                _postFrameUpdatables[i].OnPostFrameUpdate();
-            }
+            for (var i = 0; i < _postFrameUpdatables.Length; ++i) _postFrameUpdatables[i].OnPostFrameUpdate();
         }
-        
+
         private void FixedUpdate()
         {
-            for (var i = 0; i < _physicsUpdatables.Length; ++i)
-            {
-                _physicsUpdatables[i].OnPhysicsUpdate();
-            }
+            for (var i = 0; i < _physicsUpdatables.Length; ++i) _physicsUpdatables[i].OnPhysicsUpdate();
         }
-        
+
         #endregion
     }
 }

@@ -12,15 +12,18 @@ namespace ZType.Core.Utility.StateMachine
         {
             public Action EnterAction;
             public Action ExitAction;
-            public Action UpdateAction;
             public IStateSwitchDecision<T> SwitchDecision;
+            public Action UpdateAction;
         }
 
         #endregion
 
         #region Constructor
 
-        public StateMachine() => _states = new Dictionary<T, StateBehaviour>();
+        public StateMachine()
+        {
+            _states = new Dictionary<T, StateBehaviour>();
+        }
 
         public StateMachine(T initialState)
         {
@@ -37,7 +40,7 @@ namespace ZType.Core.Utility.StateMachine
         private StateBehaviour _curBehaviour;
 
         #endregion
-        
+
         #region Properties
 
         public T CurrentState
@@ -46,31 +49,31 @@ namespace ZType.Core.Utility.StateMachine
             set
             {
                 if (_currentState.Equals(value)) return;
-                
+
                 _curBehaviour?.ExitAction?.Invoke();
-                
+
                 PreviousState = _currentState;
                 _currentState = value;
                 _curBehaviour = _states[value];
-                
+
                 _curBehaviour.EnterAction?.Invoke();
             }
         }
-        
+
         public T PreviousState { get; private set; }
 
         #endregion
 
         #region Methods
-        
+
         public void Update()
         {
-            if(_curBehaviour == null) return;
-            
-           _curBehaviour.UpdateAction?.Invoke();
-           
-            if(_curBehaviour.SwitchDecision == null || 
-               !_curBehaviour.SwitchDecision.TrySwitchState(out var newState)) return;
+            if (_curBehaviour == null) return;
+
+            _curBehaviour.UpdateAction?.Invoke();
+
+            if (_curBehaviour.SwitchDecision == null ||
+                !_curBehaviour.SwitchDecision.TrySwitchState(out var newState)) return;
 
             CurrentState = newState;
         }
@@ -79,25 +82,33 @@ namespace ZType.Core.Utility.StateMachine
         {
             if (_states.TryGetValue(state, out var behaviour))
                 return behaviour;
-            
+
             behaviour = new StateBehaviour();
             _states.Add(state, behaviour);
 
             return behaviour;
         }
-        public void SetEnterAction(T state, Action enterAction) => 
+
+        public void SetEnterAction(T state, Action enterAction)
+        {
             GetStateBehaviour(state).EnterAction = enterAction;
+        }
 
-        public void SetExitAction(T state, Action exitAction) =>
+        public void SetExitAction(T state, Action exitAction)
+        {
             GetStateBehaviour(state).ExitAction = exitAction;
-        
-        public void SetUpdateAction(T state, Action updateAction) => 
-            GetStateBehaviour(state).UpdateAction = updateAction;
+        }
 
-        public void SetSwitchDecision(T state, IStateSwitchDecision<T> switchDecision) => 
+        public void SetUpdateAction(T state, Action updateAction)
+        {
+            GetStateBehaviour(state).UpdateAction = updateAction;
+        }
+
+        public void SetSwitchDecision(T state, IStateSwitchDecision<T> switchDecision)
+        {
             GetStateBehaviour(state).SwitchDecision = switchDecision;
+        }
 
         #endregion
     }
 }
-
