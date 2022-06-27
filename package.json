@@ -5,12 +5,16 @@
   "description": "Core scripts for any type of Unity game project.",
   "unity": "2021.3",
   "unityRelease": "2f1",
+  "category": "tool",
   "documentationUrl": "",
   "changelogUrl": "",
   "licensesUrl": "",
   "dependencies": {
     "com.cysharp.unitask": "2.3.1",
-    "com.neuecc.unirx": "7.1.0"
+    "com.neuecc.unirx": "7.1.0",
+    "com.unity-atoms.unity-atoms-base-atoms": "4.4.5",
+    "com.unity-atoms.unity-atoms-core": "4.4.5",
+    "com.unity-atoms.unity-atoms-scene-mgmt": "4.4.5"
   },
   "keywords": [
     "toolkit",
@@ -23,5 +27,5 @@
     "email": "md.zaid73@gmail.com",
     "url": "https://github.com/cobaltBlue73/ztype-unity-game-toolkit-core"
   },
-  "type": "library"
+  "type": "tool"
 }
